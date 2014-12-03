@@ -43,6 +43,14 @@ namespace DataSection
 
 	public class TabTableLoader
 	{
+		public enum eStatus
+		{
+			ReadHead = 0,
+			ReadType = 1,
+			ReadDefault = 2,
+			ReadBody = 3,
+		};
+
 		public static TabTableSection loadFile( string file )
 		{
 			return loadString( Resources.Load( file ).ToString() );
@@ -57,28 +65,49 @@ namespace DataSection
 		{
 			_TabTableHead tableHead = new _TabTableHead();
 
-			string head = input.ReadLine();
-			tableHead.initHeads( head );
-
-			string typeDef = input.ReadLine();
-			tableHead.initTypeDef( typeDef );
-
-			string defaultValue = input.ReadLine();
-			tableHead.initDefaultValues( defaultValue );
-
 			TabTableSection root = new TabTableSection("root");
 			_TabTableRow tableRow = new _TabTableRow( tableHead );
+
+			eStatus state = eStatus.ReadHead;
 
 			while (true)
 			{
 				string row = input.ReadLine();
+
 				if (row == null)
 					break;
 
-				if (row.Length > 0)
+				if (row.Trim().Length == 0)
+					continue;
+
+				char c = row[0];
+				if (c == '#' || c == ';')
+					continue;  // ignore comment
+
+				switch (state)
 				{
+				case eStatus.ReadHead:
+					tableHead.initHeads( row );
+					state = eStatus.ReadType;
+					break;
+
+				case eStatus.ReadType:
+					tableHead.initTypeDef( row );
+					state = eStatus.ReadDefault;
+					break;
+
+				case eStatus.ReadDefault:
+					tableHead.initDefaultValues( row );
+					state = eStatus.ReadBody;
+					break;
+
+				case eStatus.ReadBody:
 					tableRow.read ( row );
 					tableRow.convertToSection( root );
+					break;
+
+				default:
+					break;
 				}
 			}
 
@@ -98,15 +127,18 @@ namespace DataSection
 
 		public _TabTableHead(){}
 
-		public static bool splitField(string line, List<string> fieldValues, Dictionary<string, int> fieldValue2index)
+		public static bool splitField(string line, List<string> fieldValues, Dictionary<string, int> fieldValue2index, bool stopIfEmpty)
 		{
 			string[] valueSplits = line.Split(SEPARATOR, System.StringSplitOptions.None);
 			int index = 0;
 			foreach (string h in valueSplits)
 			{
+				if (stopIfEmpty && h.Trim().Length == 0)
+					return true;
+
 				fieldValues.Add( h );
 
-				if (fieldValue2index !=null)
+				if (fieldValue2index != null)
 					fieldValue2index[h] = index;
 				index++;
 			}
@@ -115,7 +147,7 @@ namespace DataSection
 
 		public bool initHeads(string input)
 		{
-			return splitField( input, m_heads, m_head2index );
+			return splitField( input, m_heads, m_head2index, true );
 		}
 
 		public bool initTypeDef(string input)
@@ -126,7 +158,13 @@ namespace DataSection
 
 		public bool initDefaultValues(string input)
 		{
-			return splitField( input, m_defaultValues, null );
+			if (!splitField( input, m_defaultValues, null, false ))
+				return false;
+			if (m_defaultValues.Count > m_heads.Count)
+				m_defaultValues.RemoveRange(m_heads.Count, m_defaultValues.Count - m_heads.Count);
+			else if (m_defaultValues.Count < m_heads.Count)
+				return false;
+			return true;
 		}
 
 		public int name2Index( string fieldName )
@@ -161,7 +199,7 @@ namespace DataSection
 		public bool read( string line )
 		{
 			m_values.Clear();
-			return _TabTableHead.splitField( line, m_values, null );
+			return _TabTableHead.splitField( line, m_values, null, false );
 		}
 
 		public void convertToSection( TabTableSection root )
