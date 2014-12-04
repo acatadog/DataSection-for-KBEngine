@@ -257,7 +257,7 @@ namespace DataSection {
 		}
 
 		/* 取得路径指向的section的前一个section，并返最后一个key
-		 * 例如：getPrevSection_( "a/b/c/d", section ) 则返回“d”，并且section指向"a/b/c"
+		 * 例如：getPrevSection_( section, "a/b/c/d", true ) 则返回“d”，并且section指向"a/b/c"
 		 */
 		private string getPrevSection_( out T section, string path, bool createIfNotExisted )
 		{
@@ -741,7 +741,7 @@ namespace DataSection {
 			}
 		}
 
-		public T writeIntArray( string path, char sep, params int[] values )
+		public T writeIntArray( string path, string sep, params int[] values )
 		{
 			T section = getSection_( path, true );
 			string[] str = new string[values.Length];
@@ -750,11 +750,11 @@ namespace DataSection {
 				str[i] = values[i].ToString();
 			}
 
-			section.asString = string.Join( ";", str );
+			section.asString = string.Join( sep, str );
 			return section;
 		}
 		
-		public T writeFloatArray( string path, char sep, params float[] values )
+		public T writeFloatArray( string path, string sep, params float[] values )
 		{
 			T section = getSection_( path, true );
 			string[] str = new string[values.Length];
@@ -763,7 +763,7 @@ namespace DataSection {
 				str[i] = values[i].ToString();
 			}
 			
-			section.asString = string.Join( ";", str );
+			section.asString = string.Join( sep, str );
 			return section;
 		}
 	}
