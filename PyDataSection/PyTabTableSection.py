@@ -93,6 +93,11 @@ class _TabTableHead( object ):
 			return False
 		return True
 
+	def getHeadFields( self ):
+		"""
+		"""
+		return self._heads
+
 	def name2index( self, fieldName ):
 		"""
 		通过字段名查找相对应的位置
@@ -150,11 +155,11 @@ class _TabTableRow( object ):
 		@param section: instance of PyTabTableSection
 		"""
 		parentSection = rootSection.createSection( "item" )
-		for index, value in enumerate( self._values ):
-			key = self._tableHead.index2name( index )
-			val = len( value ) > 0 and value or self._tableHead.getDefaultValue( index )
+		for index, key in enumerate( self._tableHead.getHeadFields() ):
+			val = len( self._values[index] ) > 0 and self._values[index] or self._tableHead.getDefaultValue( index )
 			section = parentSection.createSection( key )
 			section.value = val
+			#print( "_TabTableRow::convertToSection(), key = '%s', value = '%s'" % (key, val) )
 
 
 def parse( filename, encoding = None ):

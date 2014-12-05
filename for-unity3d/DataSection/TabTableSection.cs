@@ -53,6 +53,7 @@ namespace DataSection
 
 		public static TabTableSection loadFile( string file )
 		{
+			//Debug.Log( string.Format( "TabTableLoader::loadFile(), {0}", file ) );
 			return loadString( Resources.Load( file ).ToString() );
 		}
 		
@@ -134,7 +135,10 @@ namespace DataSection
 			foreach (string h in valueSplits)
 			{
 				if (stopIfEmpty && h.Trim().Length == 0)
+				{
+					//Debug.LogError( string.Format( "_TabTableHead::splitField(), stop field on '{0}'", fieldValues[index - 1] ) );
 					return true;
+				}
 
 				fieldValues.Add( h );
 
@@ -143,6 +147,11 @@ namespace DataSection
 				index++;
 			}
 			return true;
+		}
+
+		public List<string> heads
+		{
+			get { return m_heads; }
 		}
 
 		public bool initHeads(string input)
@@ -206,10 +215,9 @@ namespace DataSection
 		{
 			TabTableSection subRoot = root.createSection( "item" );
 			int index = 0;
-			foreach (string value in m_values)
+			foreach (string key in m_tableHead.heads)
 			{
-				string key = m_tableHead.index2Name( index );
-				string val = value.Length > 0 ? value : m_tableHead.getDefaultValue( index );
+				string val = m_values[index].Length > 0 ? m_values[index] : m_tableHead.getDefaultValue( index );
 				index++;
 				TabTableSection section = subRoot.createSection( key );
 				section.value = val;
