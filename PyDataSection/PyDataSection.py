@@ -324,16 +324,13 @@ class PyDataSectionNode( PyDataSection ):
 		p = path.split( "/" )
 		sec = self
 		for e in p:
-			try:
-				i = sec.findChildIndex( e )
-			except ValueError as exc:
-				self.debug_output( exc )
-					
+			i = sec.findChildIndex( e )
+			if i > -1:
+				sec = sec.childNodes_[i]
+			else:
 				if not create:
 					return None
 				sec = sec.addSection_( e )
-			else:
-				sec = sec.childNodes_[i]
 		return sec
 		
 	def getSections_( self, path ):
