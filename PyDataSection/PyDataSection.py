@@ -160,6 +160,27 @@ class PyDataSection( object ):
 			self.debug_output( exc )
 			return []
 
+	def asStringArray_( self, separator = "," ):
+		try:
+			return tuple( [ e for e in self.value_.split(separator) if len(e.strip()) > 0 ] )
+		except Exception as exc:
+			self.debug_output( exc )
+			return ()
+
+	def asStringArrays_( self, separator = ";", separator2 = "," ):
+		try:
+			result = []
+			value = self.value_
+			for v1 in value.split(separator):
+				if len(v1.strip()) == 0:
+					continue
+				result.append( [ v2 for v2 in v1.split(separator2) if len(v2.strip()) > 0 ] )
+			return result
+		except Exception as exc:
+			self.debug_output( exc )
+			return []
+
+
 	def asWideString_( self ):
 		raise "sorry, I don't support this function."
 	
@@ -207,6 +228,10 @@ class PyDataSection( object ):
 		self.value_ = separator.join( [ str(e) for e in value ] )
 	
 	def toFloatArray_( self, value, separator = "," ):
+		assert isinstance( value, ( tuple, list ) )
+		self.value_ = separator.join( [ str(e) for e in value ] )
+	
+	def toStringArray_( self, value, separator = "," ):
 		assert isinstance( value, ( tuple, list ) )
 		self.value_ = separator.join( [ str(e) for e in value ] )
 	
@@ -606,6 +631,20 @@ class PyDataSectionNode( PyDataSection ):
 			self.debug_output( exc )
 			return []
 
+	def readStringArray( self, name, separator = "," ):
+		try:
+			return self.getSection_(name).asStringArray_( separator )
+		except Exception as exc:
+			self.debug_output( exc )
+			return ()
+	
+	def readStringArrays( self, name, separator = ";", separator2 = "," ):
+		try:
+			return self.getSection_( name ).asStringArrays_( separator, separator2 )
+		except Exception as exc:
+			self.debug_output( exc )
+			return []
+
 	def readWideString( self, name ):
 		return self.getSection_(name).asWideString_()
 	
@@ -704,13 +743,7 @@ class PyDataSectionNode( PyDataSection ):
 		return sec
 	
 	def writeIntArrays( self, name, values, separator = ";", separator2 = "," ):
-		assert isinstance( values, ( tuple, list ) )
-		s = []
-		for intVS in values:
-			s.append( separator2.join( [str(e) for e in intVS] ) )
-			
-		sec = self.getSection_(name, True)
-		sec.toString_( separator.join( s ) )
+		self.writeStringArrays( name, values, separator, separator2 )
 
 	def writeFloatArray( self, name, value, separator = "," ):
 		sec = self.getSection_(name, True)
@@ -718,6 +751,14 @@ class PyDataSectionNode( PyDataSection ):
 		return sec
 	
 	def writeFloatArrays( self, name, values, separator = ";", separator2 = "," ):
+		self.writeStringArrays( name, values, separator, separator2 )
+
+	def writeStringArray( self, name, value, separator = "," ):
+		sec = self.getSection_(name, True)
+		sec.toStringArray_( value, separator )
+		return sec
+
+	def writeStringArrays( self, name, values, separator = ";", separator2 = "," ):
 		assert isinstance( values, ( tuple, list ) )
 		s = []
 		for intVS in values:

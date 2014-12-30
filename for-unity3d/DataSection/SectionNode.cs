@@ -574,41 +574,119 @@ namespace DataSection {
 		{
 			List<int> result = new List<int>();
 			
-			var section = getSection_( path, false );
-			if (section != null)
+			foreach (var s in readStringArray(path, sep))
 			{
-				string val = section.asString;
-				foreach (var s in val.Split( sep ))
-				{
-					if (s.Length == 0)
-						continue;
-					result.Add( int.Parse( s ) );
-				}
-			}
-			
-			return result.ToArray();
-		}
-		
-		public float[] readFloatArray( string path, char sep )
-		{
-			List<float> result = new List<float>();
-			
-			var section = getSection_( path, false );
-			if (section != null)
-			{
-				string val = section.asString;
-				foreach (var s in val.Split( sep ))
-				{
-					if (s.Length == 0)
-						continue;
-					result.Add( float.Parse( s ) );
-				}
+				if (s.Length == 0)
+					continue;
+				result.Add( int.Parse( s ) );
 			}
 			
 			return result.ToArray();
 		}
 
-		public T writeBool( string path, bool val )
+		public int[][] readIntArrays(string path, char sep, char sep2)
+		{
+			var result = new List<int[]>();
+
+			foreach (var ss in readStringArrays(path, sep, sep2))
+			{
+				if (ss.Length == 0)
+					continue;
+
+				var subRes = new List<int>();
+				foreach (var s in ss)
+				{
+					if (s.Length == 0)
+						continue;
+
+					subRes.Add( int.Parse( s ) );
+				}
+				result.Add(subRes.ToArray());
+			}
+
+			return result.ToArray();
+		}
+
+		public float[] readFloatArray(string path, char sep)
+		{
+			List<float> result = new List<float>();
+			
+			foreach (var s in readStringArray(path, sep))
+			{
+				if (s.Length == 0)
+					continue;
+				result.Add( float.Parse( s ) );
+			}
+			
+			return result.ToArray();
+		}
+
+		public float[][] readFloatArrays(string path, char sep, char sep2)
+		{
+			var result = new List<float[]>();
+
+			foreach (var ss in readStringArrays(path, sep, sep2))
+			{
+				if (ss.Length == 0)
+					continue;
+
+				var subRes = new List<float>();
+				foreach (var s in ss)
+				{
+					if (s.Length == 0)
+						continue;
+
+					subRes.Add(float.Parse(s));
+				}
+				result.Add(subRes.ToArray());
+			}
+
+			return result.ToArray();
+		}
+
+		/// <summary>
+		/// example: section.readStringArrays( "abc/def/g/h", ';' );
+		/// </summary>
+		/// <returns></returns>
+		public string[] readStringArray(string path, char sep)
+		{
+			var section = getSection_(path, false);
+			if (section != null)
+			{
+				string val = section.asString;
+				return val.Split(sep);
+			}
+
+			return new string[0];
+		}
+
+		/// <summary>
+		/// example: section.readStringArrays( "abc/def/g/h", ';', ',' );
+		/// </summary>
+		/// <returns></returns>
+		public string[][] readStringArrays(string path, char sep, char sep2)
+		{
+			var section = getSection_(path, false);
+			if (section == null)
+			{
+				return new string[0][];
+			}
+
+			var result = new List<string[]>();
+			string val = section.asString;
+			
+			foreach (var ss in val.Split(sep))
+			{
+				if (string.IsNullOrEmpty( ss ))
+					continue;
+
+				result.Add( ss.Split(sep2) );
+			}
+
+			return result.ToArray();
+	}
+
+		public T writeBool(string path, bool val)
 		{
 			T section = getSection_( path, true );
 			section.asBool = val;
@@ -764,6 +842,14 @@ namespace DataSection {
 			}
 			
 			section.asString = string.Join( sep, str );
+			return section;
+		}
+
+		public T writeStringArray(string path, string sep, params string[] values)
+		{
+			T section = getSection_(path, true);
+
+			section.asString = string.Join(sep, values);
 			return section;
 		}
 	}
